@@ -1,0 +1,108 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+sub spacelength {
+	my ($line) = @_;
+	if ($line =~ /^([\s\t]+)/) {
+		return length($1);
+	}
+	else {
+		return 0;
+	}
+}
+
+sub nonspacelength {
+	my ($line) = @_;
+	return length($line) - spacelength($line);
+}
+
+my @files = split (/[\r\n]+/, `find -name "*.cs"`);
+
+my $prev_in_using = "";
+my $in_using = "";
+foreach my $file (@files) {
+	print $file."\n";
+	open my $fh, "<", $file;
+	my @lines = ();
+	foreach my $line (<$fh>) {
+		if ($line =~ /^using Microsoft/i) {
+			$in_using = "xna";
+		}
+		elsif ($line =~ /^using Knot/i) {
+			$in_using = "knot";
+		}
+		elsif ($line =~ /^using System/i) {
+			$in_using = "system";
+		}
+		elsif ($line =~ /^using /i) {
+			$in_using = "other";
+		}
+		else {
+			$in_using = "";
+		}
+
+		if ($prev_in_using && length($line) < 3) {
+			next;
+		}
+
+		chomp(my $_line = $line);
+#		print "# $in_using ne $prev_in_using: $_line\n";
+		if ($in_using ne $prev_in_using && $prev_in_using) {
+			push @lines, "\n";
+		}
+		push @lines, $line;
+
+		$prev_in_using = $in_using;
+	}
+
+	for (my $i = 0; $i < @lines; ++$i) {
+		if ($lines[$i-1] =~ /^\s*[{]\s*$/ && nonspacelength($lines[$i]) == 0) {# && spacelength($lines[$i]) > spacelength($lines[$i-1])) {
+			$lines[$i] = "FUCK";
+		}
+		if ($lines[$i+1] =~ /^\s*[}]\s*$/ && nonspacelength($lines[$i]) == 0) {# && spacelength($lines[$i]) > spacelength($lines[$i+1])) {
+			$lines[$i] = "FUCK";
+		}
+		if ($lines[$i-1] =~ /[{]\s*$/ && $lines[$i-1] !~ /[}]/ && nonspacelength($lines[$i]) == 0) {# && spacelength($lines[$i]) > spacelength($lines[$i-1])) {
+			$lines[$i] = "FUCK";
+		}
+		if ($lines[$i+1] =~ /[}].?.?.?\s*$/ && $lines[$i+1] !~ /[{]/ && nonspacelength($lines[$i]) == 0) {# && spacelength($lines[$i]) > spacelength($lines[$i+1])) {
+			$lines[$i] = "FUCK";
+		}
+		if ($lines[$i-1] =~ /[(]\s*$/ && $lines[$i-1] !~ /[)]/ && nonspacelength($lines[$i]) == 0) {# && spacelength($lines[$i]) > spacelength($lines[$i-1])) {
+			$lines[$i] = "FUCK";
+		}
+		if ($lines[$i+1] =~ /[)].?.?.?\s*$/ && $lines[$i+1] !~ /[(]/ && nonspacelength($lines[$i]) == 0) {# && spacelength($lines[$i]) > spacelength($lines[$i+1])) {
+			$lines[$i] = "FUCK";
+		}
+		if ($lines[$i-2] =~ /[=][>]\s*$/ && $lines[$i-1] =~ /^\s*[{]\s*$/ && $lines[$i] =~ /^\s*[}][;]\s*$/) {
+			chomp $lines[$i-2];
+			$lines[$i-2] .= "{};\n";
+			$lines[$i-1] = "FUCK";
+			$lines[$i] = "FUCK";
+		}
+		if ($lines[$i-1] =~ /[=][>]\s*$/ && $lines[$i] =~ /^\s*[{][}][;]\s*$/) {
+			chomp $lines[$i-1];
+			$lines[$i-1] .= "{};\n";
+			$lines[$i] = "FUCK";
+		}
+		if (nonspacelength($lines[$i+1]) == 0 && nonspacelength($lines[$i]) == 0) {
+			$lines[$i] = "FUCK";
+		}
+		if ($lines[$i] =~ /using Microsoft.VisualStudio.TestTools.UnitTesting/) {
+			$lines[$i] = "using NUnit.Framework;\n";
+		}
+		$lines[$i] =~ s/TestClass/TestFixture/gm;
+		$lines[$i] =~ s/\[TestMethod\]/\[Test\]/gm;
+	}
+	@lines = grep {!/FUCK/} @lines;
+
+	@lines = map { if (/Log.Debug/) { s/.ToString.?\(\)//gm; s/[+]/,/gm; s/\s*?[,]/,/gm; }; $_ } @lines;
+
+	@lines = grep {!/Microsoft.VisualStudio.TestTools/} @lines;
+
+	open my $fh, ">", $file;
+	print $fh join('', @lines);
+	close $fh;
+}
