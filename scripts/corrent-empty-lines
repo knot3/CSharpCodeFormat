@@ -95,6 +95,7 @@ foreach my $file (@files) {
 		}
 		$lines[$i] =~ s/TestClass/TestFixture/gm;
 		$lines[$i] =~ s/\[TestMethod\]/\[Test\]/gm;
+		$lines[$i] =~ s/([a-zA-Z0-9])\(/$1 (/gm;
 	}
 	@lines = grep {!/FUCK/} @lines;
 
