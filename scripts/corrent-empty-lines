@@ -18,7 +18,7 @@ sub nonspacelength {
 	return length($line) - spacelength($line);
 }
 
-my @files = split (/[\r\n]+/, `find -name "*.cs"`);
+my @files = split (/[\r\n]+/, `find -name "*.cs" -or -name "*.template"`);
 
 my $prev_in_using = "";
 my $in_using = "";
