@@ -18,6 +18,36 @@ sub nonspacelength {
 	return length($line) - spacelength($line);
 }
 
+sub copyright_lines {
+	return (map { $_."\n" } split (/\r?\n/, qq{#region Copyright
+
+/*
+ * Copyright (c) 2013-2014 Tobias Schulz, Maximilian Reuter, Pascal Knodel,
+ *                         Gerd Augsburg, Christina Erler, Daniel Warzel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#endregion
+}));
+}
+
 my @files = split (/[\r\n]+/, `find -name "*.cs" -or -name "*.template"`);
 
 my $prev_in_using = "";
@@ -25,8 +55,22 @@ my $in_using = "";
 foreach my $file (@files) {
 	print $file."\n";
 	open my $fh, "<", $file;
+	my @orig_lines = <$fh>;
+#	@orig_lines = map { s/[\r\n]+$//gm; $_ } @orig_lines;
+	close $fh;
+
+	my @lines_above_copyright_notice = ();
+	while (my $line = shift @orig_lines) {
+		if ($line =~ /^[#]endregion\s*$/) { # if ($line =~ /^\s[*]\/\s*$/) {
+			@lines_above_copyright_notice = ();
+			last;
+		}
+		push @lines_above_copyright_notice, $line;
+	}
+	unshift @orig_lines, @lines_above_copyright_notice;
+
 	my @lines = ();
-	foreach my $line (<$fh>) {
+	while (my $line = shift @orig_lines) {
 		if ($line =~ /^using Microsoft/i) {
 			$in_using = "xna";
 		}
@@ -104,6 +148,6 @@ foreach my $file (@files) {
 	@lines = grep {!/Microsoft.VisualStudio.TestTools/} @lines;
 
 	open my $fh, ">", $file;
-	print $fh join('', @lines);
+	print $fh join('', copyright_lines(), @lines);
 	close $fh;
 }
