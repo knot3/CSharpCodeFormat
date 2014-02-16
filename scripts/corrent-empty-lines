@@ -18,6 +18,22 @@ sub nonspacelength {
 	return length($line) - spacelength($line);
 }
 
+sub using_key {
+	my ($line) = @_;
+	if ($line =~ /^Microsoft/i) {
+		return 2;
+	}
+	elsif ($line =~ /^Knot/i) {
+		return 4;
+	}
+	elsif ($line =~ /^System/i) {
+		return 1;
+	}
+	else {
+		return 3;
+	}
+}
+
 sub copyright_lines {
 	return (map { $_."\n" } split (/\r?\n/, qq{#region Copyright
 
@@ -50,13 +66,10 @@ sub copyright_lines {
 
 my @files = split (/[\r\n]+/, `find -name "*.cs" -or -name "*.template"`);
 
-my $prev_in_using = "";
-my $in_using = "";
 foreach my $file (@files) {
 	print $file."\n";
 	open my $fh, "<", $file;
 	my @orig_lines = <$fh>;
-#	@orig_lines = map { s/[\r\n]+$//gm; $_ } @orig_lines;
 	close $fh;
 
 	my @lines_above_copyright_notice = ();
@@ -69,36 +82,30 @@ foreach my $file (@files) {
 	}
 	unshift @orig_lines, @lines_above_copyright_notice;
 
+	my %usings = map { $_ => 1 } map { s/^[^\s]*?using (.*)[;]/$1/gm; s/[\r\n]+//gm; $_ } grep { /^[^\s]*?using (.*)[;]/ } @orig_lines;
+	my $temp = join ('', @orig_lines);
+	$temp =~ s/#region Using[^#]*#endregion//gm;
+	@orig_lines = map { $_.qq{\n} } split (/\n/, $temp);
+
+	my @sorted_usings = sort { using_key($a) <=> using_key($b) } sort { $a cmp $b } keys %usings;
+
 	my @lines = ();
-	while (my $line = shift @orig_lines) {
-		if ($line =~ /^using Microsoft/i) {
-			$in_using = "xna";
-		}
-		elsif ($line =~ /^using Knot/i) {
-			$in_using = "knot";
-		}
-		elsif ($line =~ /^using System/i) {
-			$in_using = "system";
-		}
-		elsif ($line =~ /^using /i) {
-			$in_using = "other";
-		}
-		else {
-			$in_using = "";
-		}
 
-		if ($prev_in_using && length($line) < 3) {
-			next;
-		}
-
-		chomp(my $_line = $line);
-#		print "# $in_using ne $prev_in_using: $_line\n";
-		if ($in_using ne $prev_in_using && $prev_in_using) {
+	push @lines, "#region Using\n";
+	push @lines, "\n";
+	my $last_key = -1;
+	foreach my $using (@sorted_usings) {
+		if ($last_key != -1 && $last_key != using_key($using)) {
 			push @lines, "\n";
 		}
-		push @lines, $line;
+		push @lines, "using ".$using.";\n";
+		$last_key = using_key($using);
+	}
+	push @lines, "\n";
+	push @lines, "#endregion\n";
 
-		$prev_in_using = $in_using;
+	while (my $line = shift @orig_lines) {
+		push @lines, $line;
 	}
 
 	for (my $i = 0; $i < @lines; ++$i) {
@@ -148,6 +155,8 @@ foreach my $file (@files) {
 	@lines = grep {!/Microsoft.VisualStudio.TestTools/} @lines;
 
 	open my $fh, ">", $file;
-	print $fh join('', copyright_lines(), @lines);
+	my $content = join('', copyright_lines(), qq[\n], @lines);
+	$content =~ tr/\x{feff}//d;
+	print $fh $content;
 	close $fh;
 }
