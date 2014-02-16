@@ -72,6 +72,14 @@ foreach my $file (@files) {
 	my @orig_lines = <$fh>;
 	close $fh;
 
+	my %usings = map { $_ => 1 } map { s/^[^\s]*?using (.*)[;]/$1/gm; s/[\r\n]+//gm; $_ } grep { /^[^\s]*?using (.*)[;]/ } @orig_lines;
+	my $temp = join ('', @orig_lines);
+	$temp =~ s/#region Using[^#]*#endregion//gm;
+	@orig_lines = map { $_.qq{\n} } split (/\n/, $temp);
+	@orig_lines = grep { !/^[^\s]*?using (.*)[;]/ } @orig_lines;
+
+	my @sorted_usings = sort { using_key($a) <=> using_key($b) } sort { $a cmp $b } keys %usings;
+
 	my @lines_above_copyright_notice = ();
 	while (my $line = shift @orig_lines) {
 		if ($line =~ /^[#]endregion\s*$/) { # if ($line =~ /^\s[*]\/\s*$/) {
@@ -81,14 +89,6 @@ foreach my $file (@files) {
 		push @lines_above_copyright_notice, $line;
 	}
 	unshift @orig_lines, @lines_above_copyright_notice;
-
-	my %usings = map { $_ => 1 } map { s/^[^\s]*?using (.*)[;]/$1/gm; s/[\r\n]+//gm; $_ } grep { /^[^\s]*?using (.*)[;]/ } @orig_lines;
-	my $temp = join ('', @orig_lines);
-	$temp =~ s/#region Using[^#]*#endregion//gm;
-	@orig_lines = map { $_.qq{\n} } split (/\n/, $temp);
-	@orig_lines = grep { !/^[^\s]*?using (.*)[;]/ } @orig_lines;
-
-	my @sorted_usings = sort { using_key($a) <=> using_key($b) } sort { $a cmp $b } keys %usings;
 
 	my @lines = ();
 
