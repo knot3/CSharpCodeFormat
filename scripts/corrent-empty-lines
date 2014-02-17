@@ -73,6 +73,7 @@ foreach my $file (@files) {
 	close $fh;
 
 	my %usings = map { $_ => 1 } map { s/^[^\s]*?using (.*)[;]/$1/gm; s/[\r\n]+//gm; $_ } map {$_.""} grep { /^[^\s]*?using (.*)[;]/ } @orig_lines;
+	$usings{'System.Diagnostics.CodeAnalysis'} = 1;
 	my $temp = join ('', @orig_lines);
 	$temp =~ s/#region Using[^#]*#endregion//gm;
 	@orig_lines = map { $_.qq{\n} } split (/\n/, $temp);
