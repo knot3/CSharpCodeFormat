@@ -23,11 +23,14 @@ sub using_key {
 	if ($line =~ /^Microsoft/i) {
 		return 2;
 	}
-	elsif ($line =~ /^Knot/i) {
-		return 4;
-	}
 	elsif ($line =~ /^System/i) {
 		return 1;
+	}
+	elsif ($line =~ /^Knot3.Framework/i) {
+		return 4;
+	}
+	elsif ($line =~ /^Knot3/i) {
+		return 5;
 	}
 	else {
 		return 3;
@@ -74,6 +77,11 @@ foreach my $file (@files) {
 
 	my %usings = map { $_ => 1 } map { s/^[^\s]*?using (.*)[;]/$1/gm; s/[\r\n]+//gm; $_ } map {$_.""} grep { /^[^\s]*?using (.*)[;]/ } @orig_lines;
 	$usings{'System.Diagnostics.CodeAnalysis'} = 1;
+#	$usings{'Knot3.Framework.Platform'} = 1;
+#	$usings{'Knot3.Framework.Core'} = 1;
+#	$usings{'Knot3.Framework.Utilities'} = 1;
+#	$usings{'Knot3.Framework.Input'} = 1;
+#	$usings{'Knot3.Framework.Output'} = 1;
 	my $temp = join ('', @orig_lines);
 	$temp =~ s/#region Using[^#]*#endregion//gm;
 	@orig_lines = map { $_.qq{\n} } split (/\n/, $temp);
