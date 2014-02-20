@@ -29,8 +29,11 @@ sub using_key {
 	elsif ($line =~ /^Knot3.Framework/i) {
 		return 4;
 	}
-	elsif ($line =~ /^Knot3/i) {
+	elsif ($line =~ /^Knot3.Game/i) {
 		return 5;
+	}
+	elsif ($line =~ /^Knot3/i) {
+		return 6;
 	}
 	else {
 		return 3;
@@ -77,6 +80,7 @@ foreach my $file (@files) {
 
 	my %usings = map { $_ => 1 } map { s/^[^\s]*?using (.*)[;]/$1/gm; s/[\r\n]+//gm; $_ } map {$_.""} grep { /^[^\s]*?using (.*)[;]/ } @orig_lines;
 	$usings{'System.Diagnostics.CodeAnalysis'} = 1;
+	delete $usings{'Knot3.Framework.Output'};
 #	$usings{'Knot3.Framework.Platform'} = 1;
 #	$usings{'Knot3.Framework.Core'} = 1;
 #	$usings{'Knot3.Framework.Utilities'} = 1;
