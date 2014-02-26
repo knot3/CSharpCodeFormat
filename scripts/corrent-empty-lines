@@ -105,8 +105,8 @@ foreach my $file (@files) {
 
 	my @lines = ();
 
-	push @lines, "#region Using\n";
-	push @lines, "\n";
+	#push @lines, "#region Using\n";
+	#push @lines, "\n";
 	my $last_key = -1;
 	foreach my $using (@sorted_usings) {
 		if ($last_key != -1 && $last_key != using_key($using)) {
@@ -116,7 +116,7 @@ foreach my $file (@files) {
 		$last_key = using_key($using);
 	}
 	push @lines, "\n";
-	push @lines, "#endregion\n";
+	#push @lines, "#endregion\n";
 
 	while (my $line = shift @orig_lines) {
 		push @lines, $line;
@@ -157,6 +157,9 @@ foreach my $file (@files) {
 		}
 		if ($lines[$i] =~ /using Microsoft.VisualStudio.TestTools.UnitTesting/) {
 			$lines[$i] = "using NUnit.Framework;\n";
+		}
+		if ($lines[$i] =~ /#(region|endregion)/) {
+			$lines[$i] = "FUCK";
 		}
 		$lines[$i] =~ s/TestClass/TestFixture/gm;
 		$lines[$i] =~ s/\[TestMethod\]/\[Test\]/gm;
