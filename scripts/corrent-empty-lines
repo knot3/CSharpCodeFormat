@@ -102,7 +102,8 @@ foreach my $file (@files) {
 
 	my @lines_above_copyright_notice = ();
 	while (my $line = shift @orig_lines) {
-		if ($line =~ /^[#]endregion\s*$/) { # if ($line =~ /^\s[*]\/\s*$/) {
+		#if ($line =~ /^[#]endregion\s*$/) { 
+		if ($line =~ /^\s[*]\/\s*$/) {
 			@lines_above_copyright_notice = ();
 			last;
 		}
