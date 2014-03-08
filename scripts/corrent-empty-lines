@@ -67,7 +67,7 @@ sub copyright_lines {
  *   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *   SOFTWARE.
- * 
+ *
  * See the LICENSE file for full license details of the Knot3 project.
  */
 }));
@@ -172,6 +172,8 @@ foreach my $file (@files) {
 		$lines[$i] =~ s/TestClass/TestFixture/gm;
 		$lines[$i] =~ s/\[TestMethod\]/\[Test\]/gm;
 		$lines[$i] =~ s/([a-zA-Z0-9])\(/$1 (/gm;
+		$lines[$i] =~ s/([a-zA-Z0-9])\[([^\]]+?)\]/$1 [$2]/gm;
+		$lines[$i] =~ s/([a-zA-Z0-9])\s+?(\[\])/$1$2/gm;
 	}
 	@lines = grep {!/FUCK/} @lines;
 
