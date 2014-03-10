@@ -9,5 +9,5 @@ cd `dirname ${SCRIPT_PATH}` > /dev/null
 SCRIPT_PATH=`pwd`;
 popd  > /dev/null
 
-$SCRIPT_PATH/scripts/astyle-csharp --suffix=none --lineend=linux $(find . -name "*.cs" -or -name "*.template")
+$SCRIPT_PATH/scripts/astyle-csharp --suffix=none --lineend=linux $(find . -name "*.cs" -or -name "*.template" | grep -v ThirdParty)
 $SCRIPT_PATH/scripts/corrent-empty-lines
