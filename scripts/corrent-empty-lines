@@ -77,7 +77,7 @@ sub copyright_lines {
 # #endregion
 
 
-my @files = split (/[\r\n]+/, `find -name "*.cs" -or -name "*.template" | grep -v ThirdParty`);
+my @files = split (/[\r\n]+/, `find -name "*.cs" -or -name "*.template" | egrep -v '(ThirdParty|MonoGame.Framework|2MGFX)'`);
 
 foreach my $file (@files) {
 	print $file."\n";
