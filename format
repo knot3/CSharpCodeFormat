@@ -10,4 +10,8 @@ SCRIPT_PATH=`pwd`;
 popd  > /dev/null
 
 $SCRIPT_PATH/scripts/astyle-csharp --suffix=none --lineend=linux $(find . -name "*.cs" -or -name "*.template" | egrep -v '(ThirdParty|MonoGame.Framework|2MGFX)')
-$SCRIPT_PATH/scripts/corrent-empty-lines
+echo diff after astyle
+git diff HEAD
+$SCRIPT_PATH/scripts/corrent-empty-lines | grep -v "uninitialized value"
+echo diff after corrent-empty-lines
+git diff HEAD
